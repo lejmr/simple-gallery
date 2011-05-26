@@ -1,3 +1,6 @@
 [submodule "vendors/limonade"]
 	path = vendors/limonade
 	url = https://github.com/sofadesign/limonade.git
+[submodule "vendors/phpthumb"]
+	path = vendors/phpthumb
+	url = https://github.com/masterexploder/PHPThumb.git

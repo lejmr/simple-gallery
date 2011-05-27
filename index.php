@@ -51,6 +51,15 @@ dispatch(array("/_public/**", array('_lim_public_file')), 'render_public_file');
   }
 
 
+
+
+  /**
+   * Internal controller that handles all HTTP requests, decides whether 
+   * handle a dir or show a picture, thumbnail or fullsize iamge.
+   *
+   * @access public
+   * @return void
+   */
 function handle_dir($path){
   $dest = file_path( option("images_dir"), $path );
   
@@ -104,6 +113,44 @@ function handle_thumbnail_preview($w,$h,$dir,$adaptive=True)
     //     Make a thumbnail
     try{
       $thumb = PhpThumbFactory::create($dest);
+      $exif = exif_read_data($dest);
+      
+     
+      $ort = $exif['Orientation'];
+      switch($ort)
+      {
+	  case 2: // horizontal flip
+  //             $thumb->flipImage($public,1);
+	  break;
+				
+	  case 3: // 180 rotate left
+	    $thumb->rotateImage(180);
+	  break;
+		    
+	  case 4: // vertical flip
+  //             $thumb->flipImage(2);
+	  break;
+		
+	  case 5: // vertical flip + 90 rotate right
+  //             $thumb->flipImage($public, 2);
+	      $thumb->rotateImage(-90);
+	  break;
+		
+	  case 6: // 90 rotate right
+	      $thumb->rotateImage(-90);
+	  break;
+		
+	  case 7: // horizontal flip + 90 rotate right
+  //             $thumb->flipImage($public,1);   
+	      $thumb->rotateImage(-90);
+	  break;
+		
+	  case 8:    // 90 rotate left
+	      $thumb->rotateImage(90);
+	  break;
+      }
+      
+      
       ($adaptive)?$thumb->adaptiveResize($w, $h):$thumb->Resize($w, $h);
       if(! is_dir(dirname($dest_cache)) ) mkdir(dirname($dest_cache), 0777, true);
       $thumb->save($dest_cache);

@@ -11,8 +11,8 @@ function configure()
 
   option('debug',              true);     
   option('cache_dir', $root_dir.'/cache/');
-//   option('images_dir', $root_dir.'/images/');
-  option('images_dir', '/media/Archiv/Fotky/');
+  option('images_dir', $root_dir.'/images/');
+//   option('images_dir', '/media/Archiv/Fotky/');
   option('tmp_dir', $root_dir.'/tmp/');
   option('public_dir', $root_dir.'/public/');
 
@@ -23,7 +23,8 @@ function configure()
 
 function before()
 {
-  layout('default_layout.php');        
+  layout('default_layout.php');       
+  set("title","");
 }
 
 
@@ -53,6 +54,8 @@ dispatch(array("/_public/**", array('_lim_public_file')), 'render_public_file');
 function handle_dir($path){
   $dest = file_path( option("images_dir"), $path );
   
+  $parhArray= explode("/",$path);
+  set("title", $parhArray[count($parhArray)-1]);
   
   $dirs= array();
   $files= array();
@@ -89,19 +92,19 @@ function handle_file($path){
 }
 
 
-dispatch('/**/thumb', 'handle_thumbnail');
-function handle_thumbnail()
+
+function handle_thumbnail_preview($w,$h,$dir,$adaptive=True)
 {
   $path = params(0);
   $dest = file_path( option("images_dir"), $path );
-  $dest_cache = file_path( option("cache_dir"),'thumbs', $path );
+  $dest_cache = file_path( option("cache_dir"),$dir, $path );
   
   if( file_exists($dest) and !file_exists($dest_cache) ){
     
     //     Make a thumbnail
     try{
       $thumb = PhpThumbFactory::create($dest);
-      $thumb->adaptiveResize(100, 100);
+      ($adaptive)?$thumb->adaptiveResize($w, $h):$thumb->Resize($w, $h);
       if(! is_dir(dirname($dest_cache)) ) mkdir(dirname($dest_cache), 0777, true);
       $thumb->save($dest_cache);
     }
@@ -110,7 +113,7 @@ function handle_thumbnail()
      // handle error here however you'd like
      $dest_tmp = file_path( option("root_dir"), "public", "img", "default.png" );
      $thumb = PhpThumbFactory::create($dest_tmp);
-     $thumb->adaptiveResize(100, 100);
+     ($adaptive)?$thumb->adaptiveResize($w, $h):$thumb->Resize($w, $h);
      $thumb->show();
     }   
   }
@@ -132,49 +135,17 @@ function handle_thumbnail()
   
   halt(NOT_FOUND, "Takovýto soubor neexistuje.");
 }
-  
+
+dispatch('/**/thumb', 'handle_thumbnail');
+function handle_thumbnail()
+{
+  return handle_thumbnail_preview(100,100,'thumbs');
+}
+
 dispatch('/**/preview', 'handle_preview');
 function handle_preview()
 {
-  $path = params(0);
-  $dest = file_path( option("images_dir"), $path );
-  $dest_cache = file_path( option("cache_dir"),'preview', $path );
-  
-  if( file_exists($dest) and !file_exists($dest_cache) ){
-    
-    //     Make a thumbnail
-    try{
-      $thumb = PhpThumbFactory::create($dest);
-      $thumb->Resize(800, 600);
-      if(! is_dir(dirname($dest_cache)) ) mkdir(dirname($dest_cache), 0777, true);
-      $thumb->save($dest_cache);
-    }
-    catch (Exception $e)
-    {
-     // handle error here however you'd like
-     $dest_tmp = file_path( option("root_dir"), "public", "img", "default.png" );
-     $thumb = PhpThumbFactory::create($dest_tmp);
-     $thumb->adaptiveResize(100, 100);
-     $thumb->show();
-    }   
-  }
-  
-  if( !file_exists($dest) and file_exists($dest_cache) ){
-    return "neco special";
-  }
-  
-  
-  //   Return thumbnail of a picture
-  if( file_exists($dest) and file_exists($dest_cache) ){  
-    $content_type = mime_type(file_extension($dest_cache));
-    $header = 'Content-type: '.$content_type;
-    if(file_is_text($dest_cache)) $header .= '; charset='.strtolower(option('encoding'));
-    if(!headers_sent()) header($header);
-    return file_read($dest_cache);
-  }
-  
-  
-  halt(NOT_FOUND, "Takovýto soubor neexistuje.");
+  return handle_thumbnail_preview(800,600,'preview',false);
 }
   
   

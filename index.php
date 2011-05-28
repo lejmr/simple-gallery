@@ -51,7 +51,60 @@ dispatch(array("/_public/**", array('_lim_public_file')), 'render_public_file');
   }
 
 
+/**
+ * Returns an array of files contained in a directory
+ *
+ * @param string $dir 
+ * @return array
+ */
+function file_list_dir_ng($dir, $sort='name')
+{
 
+  /**
+  * Function for array sorting according last modification parameter
+  *
+  * @access private
+  * @return bool
+  */
+  function DateCmp($a, $b)
+  {
+    return ($a[1] < $b[1]) ? 0 : -1;
+  }
+
+
+  $files = array();
+  if ($handle = opendir($dir))
+  {
+    while (false !== ($file = readdir($handle)))
+    {
+      if ($file[0] != "." && $file != "..")
+      {
+	
+	if($sort=='date')
+	{
+	  $LastModified = getlastmod(file_path($dir, $file));
+	  $files[] = array($file, $LastModified);
+	}
+	
+	if($sort=='name') $files[]= $file;
+	
+      }
+    }
+    closedir($handle);
+  }
+  
+  if($sort=='date')
+  {
+    usort($files, 'DateCmp');
+    foreach($files as $item)
+      $tmp_files[]= $item[0];
+    $files= $tmp_files;
+  }
+  
+  if($sort=='name') asort( $files );
+  
+  return $files;
+}
 
   /**
    * Internal controller that handles all HTTP requests, decides whether 
@@ -68,7 +121,7 @@ function handle_dir($path){
   
   $dirs= array();
   $files= array();
-  foreach( file_list_dir($dest) as $item  ){
+  foreach( file_list_dir_ng($dest) as $item  ){
       $tmp_dest= file_path($dest, $item );
       
       if( is_dir( $tmp_dest ) ){

@@ -114,7 +114,8 @@ function handle_thumbnail_preview($w,$h,$dir,$adaptive=True)
     try{
       $thumb = PhpThumbFactory::create($dest);
       $exif = exif_read_data($dest);
-      
+     
+     
      
       $ort = $exif['Orientation'];
       switch($ort)
@@ -124,7 +125,7 @@ function handle_thumbnail_preview($w,$h,$dir,$adaptive=True)
 	  break;
 				
 	  case 3: // 180 rotate left
-	    $thumb->rotateImage(180);
+	    $thumb->rotateImageNDegrees(180);
 	  break;
 		    
 	  case 4: // vertical flip
@@ -133,20 +134,20 @@ function handle_thumbnail_preview($w,$h,$dir,$adaptive=True)
 		
 	  case 5: // vertical flip + 90 rotate right
   //             $thumb->flipImage($public, 2);
-	      $thumb->rotateImage(-90);
+	      $thumb->rotateImageNDegrees(-90);
 	  break;
 		
 	  case 6: // 90 rotate right
-	      $thumb->rotateImage(-90);
+	      $thumb->rotateImageNDegrees(-90);
 	  break;
 		
 	  case 7: // horizontal flip + 90 rotate right
   //             $thumb->flipImage($public,1);   
-	      $thumb->rotateImage(-90);
+	      $thumb->rotateImageNDegrees(-90);
 	  break;
 		
 	  case 8:    // 90 rotate left
-	      $thumb->rotateImage(90);
+	      $thumb->rotateImageNDegrees(90);
 	  break;
       }
       
@@ -172,11 +173,13 @@ function handle_thumbnail_preview($w,$h,$dir,$adaptive=True)
   
   //   Return thumbnail of a picture
   if( file_exists($dest) and file_exists($dest_cache) ){  
-    $content_type = mime_type(file_extension($dest_cache));
-    $header = 'Content-type: '.$content_type;
-    if(file_is_text($dest_cache)) $header .= '; charset='.strtolower(option('encoding'));
-    if(!headers_sent()) header($header);
-    return file_read($dest_cache);
+//     $content_type = mime_type(file_extension($dest_cache));
+//     $header = 'Content-type: '.$content_type;
+//     if(file_is_text($dest_cache)) $header .= '; charset='.strtolower(option('encoding'));
+//     if(!headers_sent()) header($header);
+    $thumb = PhpThumbFactory::create($dest_cache);
+    $thumb->show();
+//     return file_read($dest_cache);
   }
   
   
